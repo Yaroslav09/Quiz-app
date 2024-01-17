@@ -27,7 +27,7 @@ fetch("question.json")
     })
 
 const CORRECT_QUIZ = 10;
-const MAX_QUESTIONS = 2;
+const MAX_QUESTIONS = 10;
 
 startQuiz = () => {
     questionCounter = 0;
