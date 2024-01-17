@@ -9,45 +9,25 @@ let acceptingAnswes = false;
 let score = 0;
 let questionCounter = 0;
 let availableQuestions = [];
+let timer;
 
-let questions = [
-    {
-        question: "Inside which HTML element do we put the JavaScript?",
-        choice1: "<script>",
-        choice2: "<javascript>",
-        choice3: "<js>",
-        choice4: "<scripting>",
-        answer: 1
-    },
-    {
-        question: "2_Iside which HTML element do we put the JavaScript?",
-        choice1: "11_<script>",
-        choice2: "22_<javascript>",
-        choice3: "33_<js>",
-        choice4: "44_<scripting>",
-        answer: 1
-    },
-    {
-        question: "What is correct syntax for referring to an external script called 'xxx.js'?",
-        choice1: "<1_script>",
-        choice2: "<2_javascript>",
-        choice3: "<3_js>",
-        choice4: "<4_scripting>",
-        answer: 3
-    },
-    {
-        question: "How do you write 'Hello world' in an alert box?",
-        choice1: "msgBox('Hello world')",
-        choice2: "alertBox('Hello world')",
-        choice3: "msg('Hello world')",
-        choice4: "alert('Hello world')",
-        answer: 4
-    }
-]
 
+let questions = [];
+
+fetch("question.json")
+    .then(res => {
+        return res.json();    
+    })
+    .then(loadedQuestions => {
+        questions = loadedQuestions;
+        startQuiz();
+    })
+    .catch(err => {
+        console.error(err);
+    })
 
 const CORRECT_QUIZ = 10;
-const MAX_QUESTIONS = 3;
+const MAX_QUESTIONS = 10;
 
 startQuiz = () => {
     questionCounter = 0;
@@ -56,9 +36,12 @@ startQuiz = () => {
     getNewQuestion();
 } 
 
-getNewQuestion = () => {
+getNewQuestion = () => {   
+
     if (availableQuestions.length === 0 || questionCounter >= MAX_QUESTIONS) {
-        return window.location.assign("/end.html");
+        localStorage.setItem("mostRecentScore", score);
+
+        return window.location.assign("/result.html");
     }
     questionCounter++;
     progressText.innerText = `Question ${questionCounter}/${MAX_QUESTIONS}`;
@@ -75,8 +58,33 @@ getNewQuestion = () => {
         choice.innerText = currentQuestion["choice" + number];
     });
 
-    availableQuestions.splice(questionIndex, 1);    
+    availableQuestions.splice(questionIndex, 1);       
+    
+    startTimer();
+    
     acceptingAnswes = true;
+};
+
+startTimer = () => {
+    clearInterval(timer);
+    let timeLimitInSeconds = 20; 
+    timer = setInterval(() => {
+        timeLimitInSeconds--;        
+        document.getElementById('timer').innerText = `${timeLimitInSeconds}s`;
+        if (timeLimitInSeconds <= 0) {
+            clearInterval(timer);            
+            handleTimeOut();
+        }
+    }, 1000);
+};
+
+handleTimeOut = () => {    
+    questionCounter++;
+    progressText.innerText = `Question ${questionCounter}/${MAX_QUESTIONS}`;
+
+    progressBarFull.style.width = `${(questionCounter / MAX_QUESTIONS) * 100}%`;
+
+    getNewQuestion();
 };
 
 choices.forEach(choice => {
@@ -93,7 +101,7 @@ choices.forEach(choice => {
         }
         
         selectedChoice.parentElement.classList.add(classToApply);
-
+        
         setTimeout( () => {
             selectedChoice.parentElement.classList.remove(classToApply);        
             getNewQuestion();
@@ -102,8 +110,6 @@ choices.forEach(choice => {
 });
 
 incrementScore = num => {
-    score =+ num;
+    score += num;
     scoreText.innerText = score;
 }
-
-startQuiz();
